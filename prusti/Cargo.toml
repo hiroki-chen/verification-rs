@@ -1,0 +1,2 @@
+[workspace]
+members = ["helloworld", "bisect", "sort"]
