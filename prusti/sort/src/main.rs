@@ -12,7 +12,7 @@ predicate! {
 #[ensures(old(a.len()) == a.len())]
 #[ensures(sorted(a))]
 fn bubble_sort(a: &mut [i64]) {
-    if a.len() == 0 {
+    if a.len() <= 1 {
         return;
     }
     let mut i = 0;
@@ -103,11 +103,64 @@ fn selection_sort(arr: &mut [i64; 10]) {
     }
 }
 
+/// Timed out?
+#[allow(unused)]
+#[ensures(old(arr.len()) == arr.len())]
+#[ensures(sorted(arr))]
+fn insertion_sort(arr: &mut [i64]) {
+    if arr.len() <= 1 {
+        return;
+    }
+
+    let len = arr.len();
+    let mut i = 1usize;
+    while i < len {
+        // 1. Loop condition.
+        body_invariant!(
+            1 <= i && i < len && len == arr.len() /* Strange condition: len == arr.len() */
+        );
+        // 2. arr[0..i] is sorted.
+        body_invariant!(forall(|k1: usize, k2: usize|
+            k1 < k2 && k2 < i - 1 ==> arr[k1] <= arr[k2]
+        ));
+        // 3. arr[0..i] <= arr[i..]
+        body_invariant!(forall(|k1: usize, k2: usize|
+            k1 < i - 1 && i - 1 <= k2 && k2 < len ==> arr[k1] <= arr[k2]
+        ));
+
+        let mut j = i;
+        let key = arr[i];
+        // To allow Prusti to encode the loop condition into Viper.
+        let mut loop_condition = j > 0 && arr[j - 1] > key;
+        while loop_condition {
+            // 1. Loop condition.
+            body_invariant!(i < len && j > 0 && arr[j - 1] > key && len == arr.len());
+            // 2. arr[0..i] is sorted.
+            body_invariant!(forall(|k1: usize, k2: usize|
+                k1 < k2 && k2 < i - 1 ==> arr[k1] <= arr[k2]
+            ));
+            // 3. arr[0..i] <= arr[i..]
+            body_invariant!(forall(|k1: usize, k2: usize|
+                k1 < i - 1 && i - 1 <= k2 && k2 < len ==> arr[k1] <= arr[k2]
+            ));
+            // 4. j is bounded.
+            body_invariant!(j <= i);
+
+            arr[j] = arr[j - 1];
+            j -= 1;
+            loop_condition = j > 0 && arr[j - 1] > key;
+        }
+
+        arr[j] = key;
+        i += 1;
+    }
+}
+
 fn main() {
     #[cfg(not(prusti))]
     {
         let mut arr = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-        selection_sort(&mut arr);
+        insertion_sort(&mut arr);
         println!("{:?}", arr);
     }
 }

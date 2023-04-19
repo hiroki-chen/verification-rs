@@ -1,2 +1,2 @@
 [workspace]
-members = ["helloworld", "bisect", "sort"]
+members = ["helloworld", "bisect", "sort", "std_specs"]
