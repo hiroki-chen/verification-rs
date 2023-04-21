@@ -1,5 +1,11 @@
 use prusti_contracts::*;
 
+predicate! {
+    fn sorted(s: &[i64]) -> bool {
+        forall(|i: usize, j: usize| (i < j && j < s.len()) ==> s[i] <= s[j])
+    }
+}
+
 /// A monotonically increasing discrete function, with domain [0, domain_size)
 trait BisectFunction {
     #[pure]
@@ -38,4 +44,41 @@ fn bisect<T: BisectFunction>(f: &T, target: i32) -> Option<usize> {
     None
 }
 
-fn main() {}
+#[allow(unused)]
+#[requires(sorted(arr))]
+#[ensures(
+    if let Some(res) = result {
+        arr[res] == target
+    } else {
+        true
+    }
+)]
+fn binary_search(arr: &[i64], target: i64) -> Option<usize> {
+    let mut lhs = 0;
+    let mut rhs = arr.len();
+
+    while lhs < rhs {
+        body_invariant!(lhs < rhs && rhs <= arr.len());
+
+        let mid = lhs + (rhs - lhs) / 2;
+
+        if arr[mid] == target {
+            return Some(mid);
+        } else if arr[mid] > target {
+            rhs = mid;
+        } else {
+            lhs = mid + 1;
+        }
+    }
+
+    None
+}
+
+fn main() {
+    let arr = [1, 2, 3, 4, 5, 8, 9];
+    // Should be `None`.
+    let res = binary_search(&arr, 10);
+    if let Some(target) = res {
+        assert!(arr[target] == 10);
+    }
+}
