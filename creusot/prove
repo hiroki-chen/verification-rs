@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+if [[ "$#" -ne 2 ]]; then
+  echo 'Usage: ./prove [prover_name] [source_file]'
+  exit 1
+fi
+
+prelude=$(pwd)/prelude
+
+cargo creusot && why3 prove -F mlcfg -P $1 -L $prelude $2 --debug=ignore_unused_vars -t 60 --color
